@@ -4,10 +4,11 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log/slog"
 	"os"
 	"sync"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 //go:embed config.json

@@ -34,6 +34,13 @@ func run(_ context.Context) error {
 		return err
 	}
 
+	// Initialize poll state and load existing polls
+	pollState := NewPollState()
+	err = pollState.LoadFromFile("polls.json")
+	if err != nil {
+		slog.Warn("failed to load poll state", "error", err)
+	}
+
 	//start a bot. args[1] should be the token for the bot.
 	//bot needs permission to see presence, see users, manage roles, see voice activity, and send messages
 	//https://discord.com/oauth2/authorize?client_id=408164522067755008&permissions=39584871222336&integration_type=0&scope=bot
@@ -47,18 +54,30 @@ func run(_ context.Context) error {
 	session.AddHandler(func(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		config.logger.Debug("presence update", slog.String("user", m.User.ID), slog.String("status", string(m.Status)))
 	})
+	ready := make(chan struct{})
+	session.AddHandler(func(s *discordgo.Session, m *discordgo.Ready) {
+		config.logger.Debug("READY", slog.String("user", m.User.ID))
+		close(ready)
+	})
 	config.Register(session)
 
 	playSoundOnJoin{config: config}.Register(session)
 	notifyOnJoin{config: config}.Register(session)
 	reactionHandler{config: config}.Register(session)
-	commands := newSlashCommands(config)
+	RegisterPollHandlers(session, pollState)
+	commands := newSlashCommands(config, pollState)
 	commands.Register(session)
 
 	err = session.Open()
 	if err != nil {
 		return err
 	}
+	select {
+	case <-ready:
+	case <-time.After(timeout):
+		return fmt.Errorf("timed out waiting for bot to start")
+	}
+
 	//create the slash commands. This must be done after the bot is open so that the bot id is known
 	err = commands.CreateCommands(session, config)
 	if err != nil {
@@ -69,6 +88,14 @@ func run(_ context.Context) error {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
+
+	// Save poll state before shutting down
+	slog.Info("saving poll state before shutdown")
+	err = pollState.SaveToFile("polls.json")
+	if err != nil {
+		slog.Error("failed to save poll state", "error", err)
+	}
+
 	// Cleanly close down the Discord session.
 	return session.Close()
 }

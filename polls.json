@@ -1,0 +1,653 @@
+{
+  "1140034563033268266-1763939229": {
+    "id": "1140034563033268266-1763939229",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 0,
+    "submissions": [],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:07:09.641928-08:00",
+    "created_at": "2025-11-23T15:07:09.641928-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266-1763939678": {
+    "id": "1140034563033268266-1763939678",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 0,
+    "submissions": [],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:14:38.090551-08:00",
+    "created_at": "2025-11-23T15:14:38.090551-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266-1763940357": {
+    "id": "1140034563033268266-1763940357",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 1,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:27:42.646295-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:28:27.209785-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:29:15.791331-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "bar",
+        "description": "foo",
+        "submitted_at": "2025-11-23T15:29:25.734343-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "bar food",
+        "description": "food",
+        "submitted_at": "2025-11-23T15:29:33.482363-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "bb",
+        "description": "aa",
+        "submitted_at": "2025-11-23T15:30:55.15861-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "cc",
+        "description": "aa",
+        "submitted_at": "2025-11-23T15:31:37.795688-08:00"
+      }
+    ],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:25:57.782388-08:00",
+    "created_at": "2025-11-23T15:25:57.782388-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266-1763941085": {
+    "id": "1140034563033268266-1763941085",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:38:11.879009-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:38:20.21602-08:00"
+      }
+    ],
+    "votes": [
+      {
+        "user_id": "203079387371798528",
+        "rankings": [
+          0,
+          1
+        ],
+        "voted_at": "2025-11-23T15:39:20.985926-08:00"
+      }
+    ],
+    "submission_end_time": "2025-11-24T01:38:05.574434-08:00",
+    "created_at": "2025-11-23T15:38:05.574434-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266-1763941258": {
+    "id": "1140034563033268266-1763941258",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 1,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:41:04.234348-08:00"
+      }
+    ],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:40:58.737414-08:00",
+    "created_at": "2025-11-23T15:40:58.737414-08:00",
+    "Interaction": {
+      "id": "1442298917889769514",
+      "application_id": "408164522067755008",
+      "type": 2,
+      "data": {
+        "id": "1442236570907312219",
+        "name": "create-vgc-poll",
+        "type": 1,
+        "resolved": null,
+        "options": [
+          {
+            "name": "expected-hours",
+            "type": 4,
+            "value": 10
+          }
+        ],
+        "target_id": ""
+      },
+      "guild_id": "1140034563033268266",
+      "channel_id": "1140034563951829150",
+      "message": null,
+      "app_permissions": "1975794582015553",
+      "member": {
+        "guild_id": "",
+        "joined_at": "2023-08-12T21:30:20.701Z",
+        "nick": "",
+        "deaf": false,
+        "mute": false,
+        "avatar": "",
+        "banner": "",
+        "user": {
+          "id": "203079387371798528",
+          "email": "",
+          "username": "whiskey.jack",
+          "avatar": "f88d6017b69e6ae9d974d47d6bcd48d5",
+          "locale": "",
+          "discriminator": "0",
+          "global_name": "WhiskeyJack",
+          "token": "",
+          "verified": false,
+          "mfa_enabled": false,
+          "banner": "",
+          "accent_color": 0,
+          "bot": false,
+          "public_flags": 0,
+          "premium_type": 0,
+          "system": false,
+          "flags": 0
+        },
+        "roles": [],
+        "premium_since": null,
+        "flags": 0,
+        "pending": false,
+        "permissions": "9007199254740991",
+        "communication_disabled_until": null
+      },
+      "user": null,
+      "locale": "en-US",
+      "guild_locale": "en-US",
+      "context": 0,
+      "authorizing_integration_owners": {
+        "0": "1140034563033268266"
+      },
+      "token": "aW50ZXJhY3Rpb246MTQ0MjI5ODkxNzg4OTc2OTUxNDpnRWU2R01yZVplenN3VmRuS2RxTzYxa0w1Wnp0UU5zdUF6U2VzcmdTWTU1TFY5aDhoMmtYSENzTWpJbzdQMXdSY0tPczJpWU1SdWZ0QXdxR2hMZzVFbWZOYVJqVlBFQ042WGRORk5sZ3piY2lkUWNrRGxQc1VPbVhlRlJncWZQVA",
+      "version": 1,
+      "entitlements": []
+    }
+  },
+  "1140034563033268266-1763941348": {
+    "id": "1140034563033268266-1763941348",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:42:33.839752-08:00"
+      }
+    ],
+    "votes": [
+      {
+        "user_id": "203079387371798528",
+        "rankings": [
+          0
+        ],
+        "voted_at": "2025-11-23T15:43:02.597997-08:00"
+      }
+    ],
+    "submission_end_time": "2025-11-24T01:42:28.335415-08:00",
+    "created_at": "2025-11-23T15:42:28.335415-08:00",
+    "Interaction": {
+      "id": "1442299294051991774",
+      "application_id": "408164522067755008",
+      "type": 2,
+      "data": {
+        "id": "1442236570907312219",
+        "name": "create-vgc-poll",
+        "type": 1,
+        "resolved": null,
+        "options": [
+          {
+            "name": "expected-hours",
+            "type": 4,
+            "value": 10
+          }
+        ],
+        "target_id": ""
+      },
+      "guild_id": "1140034563033268266",
+      "channel_id": "1140034563951829150",
+      "message": null,
+      "app_permissions": "1975794582015553",
+      "member": {
+        "guild_id": "",
+        "joined_at": "2023-08-12T21:30:20.701Z",
+        "nick": "",
+        "deaf": false,
+        "mute": false,
+        "avatar": "",
+        "banner": "",
+        "user": {
+          "id": "203079387371798528",
+          "email": "",
+          "username": "whiskey.jack",
+          "avatar": "f88d6017b69e6ae9d974d47d6bcd48d5",
+          "locale": "",
+          "discriminator": "0",
+          "global_name": "WhiskeyJack",
+          "token": "",
+          "verified": false,
+          "mfa_enabled": false,
+          "banner": "",
+          "accent_color": 0,
+          "bot": false,
+          "public_flags": 0,
+          "premium_type": 0,
+          "system": false,
+          "flags": 0
+        },
+        "roles": [],
+        "premium_since": null,
+        "flags": 0,
+        "pending": false,
+        "permissions": "9007199254740991",
+        "communication_disabled_until": null
+      },
+      "user": null,
+      "locale": "en-US",
+      "guild_locale": "en-US",
+      "context": 0,
+      "authorizing_integration_owners": {
+        "0": "1140034563033268266"
+      },
+      "token": "aW50ZXJhY3Rpb246MTQ0MjI5OTI5NDA1MTk5MTc3NDpGUUxFSHpUSVZ2M2VXcVRJdk5Ka211NWJPeXhiME5YeE4zek9NVDYzZkZENFVKNEZlUVZwbVhMZTR4eW1ZajR3UnBOU1JoVnRSV05LN0Q3UGlDWW9CVFVIUE1uVjJ4ZU1vUWtBY3BJZnFIdFhKdUZTd3NtMnVEOThzYXA5RW1PVA",
+      "version": 1,
+      "entitlements": []
+    }
+  },
+  "1140034563033268266-1763941743": {
+    "id": "1140034563033268266-1763941743",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "game",
+        "submitted_at": "2025-11-23T15:49:11.97323-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "game",
+        "description": "test",
+        "submitted_at": "2025-11-23T15:49:21.574717-08:00"
+      }
+    ],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:49:03.090898-08:00",
+    "created_at": "2025-11-23T15:49:03.090898-08:00",
+    "Interaction": {
+      "id": "1442300949585461268",
+      "application_id": "408164522067755008",
+      "type": 2,
+      "data": {
+        "id": "1442236570907312219",
+        "name": "create-vgc-poll",
+        "type": 1,
+        "resolved": null,
+        "options": [
+          {
+            "name": "expected-hours",
+            "type": 4,
+            "value": 10
+          }
+        ],
+        "target_id": ""
+      },
+      "guild_id": "1140034563033268266",
+      "channel_id": "1140034563951829150",
+      "message": null,
+      "app_permissions": "1975794582015553",
+      "member": {
+        "guild_id": "",
+        "joined_at": "2023-08-12T21:30:20.701Z",
+        "nick": "",
+        "deaf": false,
+        "mute": false,
+        "avatar": "",
+        "banner": "",
+        "user": {
+          "id": "203079387371798528",
+          "email": "",
+          "username": "whiskey.jack",
+          "avatar": "f88d6017b69e6ae9d974d47d6bcd48d5",
+          "locale": "",
+          "discriminator": "0",
+          "global_name": "WhiskeyJack",
+          "token": "",
+          "verified": false,
+          "mfa_enabled": false,
+          "banner": "",
+          "accent_color": 0,
+          "bot": false,
+          "public_flags": 0,
+          "premium_type": 0,
+          "system": false,
+          "flags": 0
+        },
+        "roles": [],
+        "premium_since": null,
+        "flags": 0,
+        "pending": false,
+        "permissions": "9007199254740991",
+        "communication_disabled_until": null
+      },
+      "user": null,
+      "locale": "en-US",
+      "guild_locale": "en-US",
+      "context": 0,
+      "authorizing_integration_owners": {
+        "0": "1140034563033268266"
+      },
+      "token": "aW50ZXJhY3Rpb246MTQ0MjMwMDk0OTU4NTQ2MTI2ODpHVW9laVpOS1BSS3ZQS3U1a2NmRVJiY3hFOWF2bUVkWEsxaVF0U05JS0FTTzZKb2g2U3U0Z04zWlpmd05UcFpGUjlibGVCWGNOOUJhdEVLMk9CMmw4NHF3Yk5YY2xpQ0tZSFI3YzE5M05YWnI0Y3doUzVMWXFNY3NFeEdWZmpscA",
+      "version": 1,
+      "entitlements": []
+    }
+  },
+  "1140034563033268266-1763941795": {
+    "id": "1140034563033268266-1763941795",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 1,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "gae",
+        "submitted_at": "2025-11-23T15:49:59.944445-08:00"
+      }
+    ],
+    "votes": [
+      {
+        "user_id": "203079387371798528",
+        "rankings": [
+          0
+        ],
+        "voted_at": "2025-11-23T15:50:06.576158-08:00"
+      }
+    ],
+    "submission_end_time": "2025-11-24T01:49:55.418529-08:00",
+    "created_at": "2025-11-23T15:49:55.418529-08:00",
+    "Interaction": {
+      "id": "1442301168977051679",
+      "application_id": "408164522067755008",
+      "type": 2,
+      "data": {
+        "id": "1442236570907312219",
+        "name": "create-vgc-poll",
+        "type": 1,
+        "resolved": null,
+        "options": [
+          {
+            "name": "expected-hours",
+            "type": 4,
+            "value": 10
+          }
+        ],
+        "target_id": ""
+      },
+      "guild_id": "1140034563033268266",
+      "channel_id": "1140034563951829150",
+      "message": null,
+      "app_permissions": "1975794582015553",
+      "member": {
+        "guild_id": "",
+        "joined_at": "2023-08-12T21:30:20.701Z",
+        "nick": "",
+        "deaf": false,
+        "mute": false,
+        "avatar": "",
+        "banner": "",
+        "user": {
+          "id": "203079387371798528",
+          "email": "",
+          "username": "whiskey.jack",
+          "avatar": "f88d6017b69e6ae9d974d47d6bcd48d5",
+          "locale": "",
+          "discriminator": "0",
+          "global_name": "WhiskeyJack",
+          "token": "",
+          "verified": false,
+          "mfa_enabled": false,
+          "banner": "",
+          "accent_color": 0,
+          "bot": false,
+          "public_flags": 0,
+          "premium_type": 0,
+          "system": false,
+          "flags": 0
+        },
+        "roles": [],
+        "premium_since": null,
+        "flags": 0,
+        "pending": false,
+        "permissions": "9007199254740991",
+        "communication_disabled_until": null
+      },
+      "user": null,
+      "locale": "en-US",
+      "guild_locale": "en-US",
+      "context": 0,
+      "authorizing_integration_owners": {
+        "0": "1140034563033268266"
+      },
+      "token": "aW50ZXJhY3Rpb246MTQ0MjMwMTE2ODk3NzA1MTY3OTpWM295RWFuMGNnV2ZmN0dWaWkwR244SzBFVUo1THdFeFFWdHhkcjBQMEhiQjc3bVB0OVk3d015cVVYN1p6cm9hZWJydnZmaTQ2MDZ6ZmxCYkN4TW1Ma2E2YmpSbG9jMVdqS1BUZE5RN1M2ZkNwSlRWMnk0elF1N0ZqamUyYldONw",
+      "version": 1,
+      "entitlements": []
+    }
+  },
+  "1140034563033268266_1763926483": {
+    "id": "1140034563033268266_1763926483",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "My test game",
+        "description": "its really cool",
+        "link": "https://example.com",
+        "submitted_at": "2025-11-23T11:37:54.459704-08:00"
+      }
+    ],
+    "votes": [
+      {
+        "user_id": "203079387371798528",
+        "rankings": [
+          0
+        ],
+        "voted_at": "2025-11-23T11:38:13.605206-08:00"
+      }
+    ],
+    "submission_end_time": "2025-11-23T21:34:43.725653-08:00",
+    "created_at": "2025-11-23T11:34:43.725653-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266_1763926827": {
+    "id": "1140034563033268266_1763926827",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "test",
+        "description": "bar",
+        "link": "https://proton.me/family",
+        "submitted_at": "2025-11-23T11:40:40.575747-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "Another game",
+        "description": "adsf",
+        "link": "https://store.steampowered.com/sale/steammachine",
+        "submitted_at": "2025-11-23T11:43:24.45248-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "asdfasdfa",
+        "description": "asdfasdfadsfadsfasdfasdfasdf",
+        "submitted_at": "2025-11-23T11:43:29.64957-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "asdfadsf",
+        "description": "asdfadfadfadsfadf",
+        "link": "sdfsdfdsfdfds",
+        "submitted_at": "2025-11-23T11:43:35.552346-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "sdfsdfsdf",
+        "description": "sdfsd",
+        "submitted_at": "2025-11-23T11:43:41.608567-08:00"
+      }
+    ],
+    "votes": [],
+    "submission_end_time": "2025-11-23T12:40:27.687708-08:00",
+    "created_at": "2025-11-23T11:40:27.687708-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266_1763930674": {
+    "id": "1140034563033268266_1763930674",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 2,
+    "submissions": [
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "asdfasdf",
+        "description": "asdf",
+        "submitted_at": "2025-11-23T12:44:43.808159-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "foobar",
+        "description": "barbar",
+        "link": "bazbaz",
+        "submitted_at": "2025-11-23T12:53:52.529998-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "Clair_Obscur_Expedition_33",
+        "description": "whoa",
+        "link": "https://store.steampowered.com/app/1903340/Clair_Obscur_Expedition_33/",
+        "submitted_at": "2025-11-23T12:54:34.392483-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "Clair_Obscur_Expedition_33",
+        "description": "Clair_Obscur_Expedition_33",
+        "submitted_at": "2025-11-23T12:54:39.656994-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "Clair_Obscur_Expedition_33",
+        "description": "Clair_Obscur_Expedition_33",
+        "submitted_at": "2025-11-23T12:55:59.06678-08:00"
+      },
+      {
+        "user_id": "203079387371798528",
+        "username": "whiskey.jack",
+        "game_name": "Clair_Obscur_Expedition_33",
+        "description": "Clair_Obscur_Expedition_33",
+        "submitted_at": "2025-11-23T12:56:10.549976-08:00"
+      }
+    ],
+    "votes": [
+      {
+        "user_id": "203079387371798528",
+        "rankings": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "voted_at": "2025-11-23T13:34:15.400612-08:00"
+      }
+    ],
+    "submission_end_time": "2025-11-23T13:44:34.285895-08:00",
+    "created_at": "2025-11-23T12:44:34.285895-08:00",
+    "Interaction": null
+  },
+  "1140034563033268266_1763939062": {
+    "id": "1140034563033268266_1763939062",
+    "guild_id": "1140034563033268266",
+    "channel_id": "1140034563951829150",
+    "creator_id": "203079387371798528",
+    "phase": 0,
+    "submissions": [],
+    "votes": [],
+    "submission_end_time": "2025-11-24T01:04:22.976468-08:00",
+    "created_at": "2025-11-23T15:04:22.976468-08:00",
+    "Interaction": null
+  }
+}
