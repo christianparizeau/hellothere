@@ -266,7 +266,7 @@ func HandleVoteSelectMenu(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}
 	selectedIdx, err := strconv.Atoi(values[0])
 	if err != nil {
-		slog.Error("something went wrong", "poll_id", poll.ID, "user_id", i.Member.User.ID, values[0])
+		slog.Error("something went wrong", "poll_id", poll.ID, "user_id", i.Member.User.ID, "value", values[0])
 		return
 	}
 	slog.Info("user selected game", "poll_id", poll.ID, "user_id", i.Member.User.ID, "rank_pos", rankPosition, "game_idx", selectedIdx)

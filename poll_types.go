@@ -100,30 +100,17 @@ func (ps *PollState) GetPoll(pollID string) (*Poll, bool) {
 	return poll, ok
 }
 
-// RemovePoll removes a poll from active state
-func (ps *PollState) RemovePoll(pollID string) {
-	ps.mut.Lock()
-	defer ps.mut.Unlock()
-	if _, ok := ps.polls[pollID]; ok {
-		delete(ps.polls, pollID)
-	}
-}
-
-// GetAllPolls returns a copy of all polls
-func (ps *PollState) GetAllPolls() []*Poll {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-	polls := make([]*Poll, 0, len(ps.polls))
-	for _, poll := range ps.polls {
-		polls = append(polls, poll)
-	}
-	return polls
-}
-
 // SaveToFile saves the poll state to a JSON file
 func (ps *PollState) SaveToFile(filename string) error {
 	ps.mut.RLock()
 	defer ps.mut.RUnlock()
+
+	for k, poll := range ps.polls {
+		//purge old polls on save
+		if poll.EndTime.Before(time.Now().Add(time.Hour * 24 * -7)) {
+			delete(ps.polls, k)
+		}
+	}
 
 	data, err := json.MarshalIndent(ps.polls, "", "  ")
 	if err != nil {
