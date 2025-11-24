@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -25,6 +27,79 @@ const (
 
 const (
 	MaxSubmissions = 20
+)
+
+var (
+	pollTemplateFuncs = template.FuncMap{
+		"add": func(a, b int) int { return a + b },
+		"medal": func(i int) string {
+			medals := []string{"🥇", "🥈", "🥉"}
+			if i < len(medals) {
+				return medals[i]
+			}
+			return fmt.Sprintf("%d.", i+1)
+		},
+	}
+
+	submissionTemplate = template.Must(template.New("submission").Funcs(pollTemplateFuncs).Parse(`# Video Game Club Poll
+Submit your game suggestions! Click the button below to add a game.
+
+**Submissions ({{.SubmissionCount}}/{{.MaxSubmissions}})**
+{{- if .Submissions}}
+{{range $i, $sub := .Submissions}}
+**{{add $i 1}}.** {{$sub.GameName}}
+{{- if $sub.Description}}
+   {{$sub.Description}}
+{{- end}}
+{{- if $sub.Link}}
+   {{$sub.Link}}
+{{- end}}
+   *Submitted by {{$sub.Username}}*
+
+{{end}}
+{{- else}}
+*No submissions yet*
+
+{{end}}
+*Submission phase ends in {{.TimeRemaining}}*`))
+
+	votingTemplate = template.Must(template.New("voting").Funcs(pollTemplateFuncs).Parse(`# Video Game Club Poll
+Vote for your preferred games! Rank all candidates from most to least preferred.
+
+{{- if .Submissions}}
+**Candidates**
+{{range $i, $sub := .Submissions}}
+**{{add $i 1}}.** {{$sub.GameName}}
+{{- if $sub.Description}}
+   {{$sub.Description}}
+{{- end}}
+{{- if $sub.Link}}
+   {{$sub.Link}}
+{{- end}}
+
+{{end}}
+{{- end}}
+**Votes**
+{{.VoteCount}} vote(s) cast
+
+*Voting ends in {{.TimeRemaining}}*`))
+
+	completedTemplate = template.Must(template.New("completed").Funcs(pollTemplateFuncs).Parse(`# Video Game Club Poll
+Voting has concluded! Here are the results:
+
+{{- if .Results}}
+**Final Rankings**
+{{range $i, $idx := .Results}}
+{{medal $i}} **{{(index $.Submissions $idx).GameName}}**
+{{- with index $.Submissions $idx}}
+{{- if .Description}}
+   {{.Description}}
+{{- end}}
+
+{{- end}}
+{{end}}
+{{- end}}
+*Poll completed • {{.VoteCount}} vote(s) cast*`))
 )
 
 func (p PollPhase) String() string {
@@ -70,6 +145,7 @@ type Poll struct {
 	EndTime     time.Time    `json:"submission_end_time"`
 	CreatedAt   time.Time    `json:"created_at"`
 	Interaction *discordgo.Interaction
+	MessageID   string
 }
 
 // PollState manages all active polls
@@ -222,12 +298,10 @@ func (p *Poll) CalculateResults() []int {
 	var results []int
 	eliminated := make(map[int]bool)
 
-	// Keep running IRV until we have a full ranking
 	for len(results) < len(p.Submissions) {
 		// Count first-choice votes for non-eliminated candidates
 		counts := make(map[int]int)
 		for _, vote := range p.Votes {
-			// Find the highest-ranked non-eliminated candidate
 			for _, candidateIdx := range vote.Rankings {
 				if !eliminated[candidateIdx] {
 					counts[candidateIdx]++
@@ -236,7 +310,7 @@ func (p *Poll) CalculateResults() []int {
 			}
 		}
 
-		// If no votes or only one candidate left, add remaining in arbitrary order
+		// If no votes, add all remaining candidates in order
 		if len(counts) == 0 {
 			for i := range p.Submissions {
 				if !eliminated[i] {
@@ -246,64 +320,39 @@ func (p *Poll) CalculateResults() []int {
 			break
 		}
 
-		// Find candidate(s) with most votes
-		maxVotes := 0
+		// Find max and min votes
+		maxVotes, minVotes := 0, len(p.Votes)+1
 		for _, count := range counts {
 			if count > maxVotes {
 				maxVotes = count
 			}
+			if count < minVotes {
+				minVotes = count
+			}
 		}
 
-		// Find all candidates with max votes (for tie handling)
+		// Collect winners (candidates with max votes)
 		var winners []int
 		for idx, count := range counts {
 			if count == maxVotes {
 				winners = append(winners, idx)
 			}
 		}
+		sort.Ints(winners) // Consistent tie-breaking
 
-		// Sort winners by submission order for consistent tie-breaking
-		sort.Ints(winners)
-
-		// Add the winner(s) to results and eliminate them
+		// Add winners to results and mark as eliminated
 		for _, winner := range winners {
 			results = append(results, winner)
 			eliminated[winner] = true
 		}
 
-		// If all candidates are now placed, we're done
-		if len(results) >= len(p.Submissions) {
-			break
-		}
-
-		// If only one candidate remains, they're last
-		var remaining []int
-		for i := range p.Submissions {
-			if !eliminated[i] {
-				remaining = append(remaining, i)
-			}
-		}
-
-		if len(remaining) == 1 {
-			results = append(results, remaining[0])
-			break
-		}
-
-		// Find candidate with fewest votes to eliminate
-		if len(remaining) > 0 {
-			minVotes := len(p.Votes) + 1
-			var toEliminate int
-
+		// Eliminate candidate with fewest votes (if not all are winners)
+		if len(results) < len(p.Submissions) {
 			for idx, count := range counts {
-				if count < minVotes && !eliminated[idx] {
-					minVotes = count
-					toEliminate = idx
+				if count == minVotes && !eliminated[idx] {
+					eliminated[idx] = true
+					break
 				}
-			}
-
-			// If we found someone to eliminate but they're not already a winner
-			if minVotes <= len(p.Votes) {
-				eliminated[toEliminate] = true
 			}
 		}
 	}
@@ -311,98 +360,51 @@ func (p *Poll) CalculateResults() []int {
 	return results
 }
 
+// pollTemplateData holds the data for rendering poll templates
+type pollTemplateData struct {
+	SubmissionCount int
+	MaxSubmissions  int
+	Submissions     []Submission
+	VoteCount       int
+	TimeRemaining   string
+	Results         []int
+}
+
 // RenderPollContent creates the Discord message content using ComponentsV2
 func (p *Poll) RenderPollContent() []discordgo.MessageComponent {
-	var contentParts []string
+	var buf bytes.Buffer
+	var err error
 
-	// Build the content based on phase
-	switch p.Phase {
-	case PhaseSubmission:
-		contentParts = append(contentParts, "# Video Game Club Poll\n")
-		contentParts = append(contentParts, "Submit your game suggestions! Click the button below to add a game.\n\n")
-
-		// Submissions section
-		contentParts = append(contentParts, fmt.Sprintf("**Submissions (%d/%d)**\n", len(p.Submissions), MaxSubmissions))
-		if len(p.Submissions) > 0 {
-			for i, sub := range p.Submissions {
-				contentParts = append(contentParts, fmt.Sprintf("**%d.** %s\n", i+1, sub.GameName))
-				if sub.Description != "" {
-					contentParts = append(contentParts, fmt.Sprintf("   %s\n", sub.Description))
-				}
-				if sub.Link != "" {
-					contentParts = append(contentParts, fmt.Sprintf("   %s\n", sub.Link))
-				}
-				contentParts = append(contentParts, fmt.Sprintf("   *Submitted by %s*\n\n", sub.Username))
-			}
-		} else {
-			contentParts = append(contentParts, "*No submissions yet*\n\n")
-		}
-
-		// Time remaining
-		timeLeft := time.Until(p.EndTime)
-		contentParts = append(contentParts, fmt.Sprintf("*Submission phase ends in %s*", formatDuration(timeLeft)))
-
-	case PhaseVoting:
-		contentParts = append(contentParts, "# Video Game Club Poll\n")
-		contentParts = append(contentParts, "Vote for your preferred games! Rank all candidates from most to least preferred.\n\n")
-
-		// Candidates section
-		if len(p.Submissions) > 0 {
-			contentParts = append(contentParts, "**Candidates**\n")
-			for i, sub := range p.Submissions {
-				contentParts = append(contentParts, fmt.Sprintf("**%d.** %s\n", i+1, sub.GameName))
-				if sub.Description != "" {
-					contentParts = append(contentParts, fmt.Sprintf("   %s\n", sub.Description))
-				}
-				if sub.Link != "" {
-					contentParts = append(contentParts, fmt.Sprintf("   %s\n", sub.Link))
-				}
-				contentParts = append(contentParts, "\n")
-			}
-		}
-
-		// Vote count
-		contentParts = append(contentParts, fmt.Sprintf("**Votes**\n%d vote(s) cast\n\n", len(p.Votes)))
-
-		// Time remaining
-		timeLeft := time.Until(p.EndTime)
-		contentParts = append(contentParts, fmt.Sprintf("*Voting ends in %s*", formatDuration(timeLeft)))
-
-	case PhaseCompleted:
-		contentParts = append(contentParts, "# Video Game Club Poll\n")
-		contentParts = append(contentParts, "Voting has concluded! Here are the results:\n\n")
-
-		// Results section
-		results := p.CalculateResults()
-		if len(results) > 0 {
-			contentParts = append(contentParts, "**Final Rankings**\n")
-			medals := []string{"🥇", "🥈", "🥉"}
-			for i, idx := range results {
-				sub := p.Submissions[idx]
-				var medal string
-				if i < len(medals) {
-					medal = medals[i]
-				} else {
-					medal = fmt.Sprintf("%d.", i+1)
-				}
-				contentParts = append(contentParts, fmt.Sprintf("%s **%s**\n", medal, sub.GameName))
-				if sub.Description != "" {
-					contentParts = append(contentParts, fmt.Sprintf("   %s\n", sub.Description))
-				}
-				contentParts = append(contentParts, "\n")
-			}
-		}
-
-		contentParts = append(contentParts, fmt.Sprintf("*Poll completed • %d vote(s) cast*", len(p.Votes)))
+	data := pollTemplateData{
+		SubmissionCount: len(p.Submissions),
+		MaxSubmissions:  MaxSubmissions,
+		Submissions:     p.Submissions,
+		VoteCount:       len(p.Votes),
+		TimeRemaining:   formatDuration(time.Until(p.EndTime)),
 	}
 
-	// Combine all content parts into a single string
-	content := strings.Join(contentParts, "")
+	switch p.Phase {
+	case PhaseSubmission:
+		err = submissionTemplate.Execute(&buf, data)
+	case PhaseVoting:
+		err = votingTemplate.Execute(&buf, data)
+	case PhaseCompleted:
+		data.Results = p.CalculateResults()
+		err = completedTemplate.Execute(&buf, data)
+	}
 
-	// Create Container with TextDisplay
+	if err != nil {
+		slog.Error("failed to render poll content", "error", err, "poll_id", p.ID)
+		return []discordgo.MessageComponent{discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{Content: "Error rendering poll content"},
+			},
+		}}
+	}
+
 	container := discordgo.Container{
 		Components: []discordgo.MessageComponent{
-			discordgo.TextDisplay{Content: content},
+			discordgo.TextDisplay{Content: buf.String()},
 		},
 	}
 
@@ -434,7 +436,7 @@ func (p *Poll) RenderPollComponents() []discordgo.MessageComponent {
 			discordgo.Button{
 				Label:    "Cast Vote",
 				Style:    discordgo.PrimaryButton,
-				CustomID: formID{PollID: p.ID, Kind: VoteKind}.String(),
+				CustomID: formID{PollID: p.ID, Kind: VoteButton}.String(),
 			}, discordgo.Button{
 				Label:    "End Voting",
 				Style:    discordgo.DangerButton,
@@ -522,7 +524,7 @@ func handleFormEvent(s *discordgo.Session, i *discordgo.InteractionCreate, pollS
 	switch f.Kind {
 	case SubmitModal:
 		HandleSubmitModal(s, i, poll)
-	case VoteKind:
+	case VoteButton:
 		HandleVoteButton(s, i, poll)
 	case SubmitButton:
 		HandleSubmitButton(s, i, poll)
@@ -536,20 +538,27 @@ func handleFormEvent(s *discordgo.Session, i *discordgo.InteractionCreate, pollS
 		HandleVoteSubmitButton(s, i, poll)
 	}
 
+	switch f.Kind {
+	case VoteButton,
+		SubmitButton,
+		LockButton,
+		EndButton:
+		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseUpdateMessage,
+			Data: &discordgo.InteractionResponseData{
+				Components: poll.RenderPollComponents(),
+				Flags:      discordgo.MessageFlagsIsComponentsV2,
+			},
+		})
+		return
+	}
+
 	components := poll.RenderPollComponents()
-
-	//Respond to the current interaction (because discord gets mad if you dont)
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Components: components,
-			Flags:      discordgo.MessageFlagsIsComponentsV2,
-		},
-	})
-
-	//Update the old interaction so that the original message is guaranteed to be updates
-	_, err := s.InteractionResponseEdit(poll.Interaction, &discordgo.WebhookEdit{
+	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		ID:         poll.MessageID,
+		Channel:    i.ChannelID,
 		Components: &components,
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
 	})
 	if err != nil {
 		slog.Error("failed to update poll message", "error", err, "poll_id", poll.ID)
@@ -564,7 +573,7 @@ var (
 	VoteSubmit   = kind("vote-submit")
 	LockButton   = kind("lock")
 	EndButton    = kind("end")
-	VoteKind     = kind("vote")
+	VoteButton   = kind("vote")
 	SubmitButton = kind("submit")
 )
 
@@ -717,6 +726,7 @@ func HandleEndButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll 
 	slog.Info("completing poll", "poll_id", poll.ID)
 
 	poll.Phase = PhaseCompleted
+
 }
 
 // buildVoteFormComponents creates the voting form components with optional error message
@@ -735,23 +745,7 @@ func buildVoteFormComponents(poll *Poll, errorText string) []discordgo.MessageCo
 	var components []discordgo.MessageComponent
 
 	for rank := 0; rank < len(poll.Submissions); rank++ {
-		// Generate ordinal label (1st, 2nd, 3rd, etc.)
-		var rankLabel string
-		if rank == 0 {
-			rankLabel = "1st Choice"
-		} else {
-			suffix := "th"
-			num := rank + 1
-			if num%10 == 1 && num != 11 {
-				suffix = "st"
-			} else if num%10 == 2 && num != 12 {
-				suffix = "nd"
-			} else if num%10 == 3 && num != 13 {
-				suffix = "rd"
-			}
-			rankLabel = fmt.Sprintf("%d%s Choice", num, suffix)
-		}
-
+		rankLabel := fmt.Sprintf("%d%s Choice", rank+1, ordinalSuffix(rank+1))
 		components = append(components, discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{discordgo.SelectMenu{
 				CustomID:    formID{PollID: poll.ID, Kind: VoteSelect, Rank: rank}.String(),
@@ -809,30 +803,13 @@ func HandleSubmitModal(s *discordgo.Session, i *discordgo.InteractionCreate, pol
 		return
 	}
 
-	var gameName, description, link string
-	for _, component := range i.ModalSubmitData().Components {
-		if actionRow, ok := component.(*discordgo.ActionsRow); ok {
-			for _, comp := range actionRow.Components {
-				if textInput, ok := comp.(*discordgo.TextInput); ok {
-					switch textInput.CustomID {
-					case "game_name":
-						gameName = textInput.Value
-					case "game_description":
-						description = textInput.Value
-					case "game_link":
-						link = textInput.Value
-					}
-				}
-			}
-		}
-	}
-
+	gameName := getModalField(i, "game_name")
 	poll.Submissions = append(poll.Submissions, Submission{
 		UserID:      i.Member.User.ID,
 		Username:    i.Member.User.Username,
 		GameName:    gameName,
-		Description: description,
-		Link:        link,
+		Description: getModalField(i, "game_description"),
+		Link:        getModalField(i, "game_link"),
 		SubmittedAt: time.Now(),
 	})
 	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -908,6 +885,30 @@ func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate
 }
 
 // Helper functions
+
+func getModalField(i *discordgo.InteractionCreate, fieldID string) string {
+	for _, component := range i.ModalSubmitData().Components {
+		if actionRow, ok := component.(*discordgo.ActionsRow); ok {
+			for _, comp := range actionRow.Components {
+				if textInput, ok := comp.(*discordgo.TextInput); ok && textInput.CustomID == fieldID {
+					return textInput.Value
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func ordinalSuffix(n int) string {
+	if n%10 == 1 && n%100 != 11 {
+		return "st"
+	} else if n%10 == 2 && n%100 != 12 {
+		return "nd"
+	} else if n%10 == 3 && n%100 != 13 {
+		return "rd"
+	}
+	return "th"
+}
 
 func truncateString(s string, maxLen int) string {
 	if len(s) <= maxLen {

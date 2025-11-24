@@ -86,6 +86,9 @@ func createPollHandler(pollState *PollState) func(s *discordgo.Session, i *disco
 			},
 		})
 
+		response, _ := s.InteractionResponse(i.Interaction)
+
+		poll.MessageID = response.ID
 		pollState.AddPoll(poll)
 
 		// Save state
