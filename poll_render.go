@@ -175,21 +175,42 @@ func (p *Poll) RenderPollComponents() []discordgo.MessageComponent {
 }
 
 // buildVoteFormComponents creates the voting form components with optional error message
-func buildVoteFormComponents(poll *Poll, errorText string) []discordgo.MessageComponent {
-	// Build select menu options from submissions
-	options := make([]discordgo.SelectMenuOption, len(poll.Submissions))
-	for idx, sub := range poll.Submissions {
-		options[idx] = discordgo.SelectMenuOption{
-			Label:       fmt.Sprintf("%d. %s", idx+1, sub.GameName),
-			Value:       fmt.Sprintf("%d", idx),
-			Description: truncateString(sub.Description, 100),
-		}
-	}
-
+func buildVoteFormComponents(poll *Poll, rankings []int, errorText string) []discordgo.MessageComponent {
 	// Create dropdown menus for each rank position
 	var components []discordgo.MessageComponent
 
 	for rank := 0; rank < len(poll.Submissions); rank++ {
+		// Build select menu options from submissions
+		// Exclude indices selected in OTHER ranks, but not this rank
+		var options []discordgo.SelectMenuOption
+		for idx, sub := range poll.Submissions {
+			// Check if this index is selected in a different rank
+			isSelectedElsewhere := false
+			for otherRank, selectedIdx := range rankings {
+				if otherRank != rank && selectedIdx == idx {
+					isSelectedElsewhere = true
+					break
+				}
+			}
+
+			if isSelectedElsewhere {
+				continue
+			}
+
+			// Check if this option is selected for the current rank
+			isDefault := false
+			if rank < len(rankings) && rankings[rank] == idx {
+				isDefault = true
+			}
+
+			options = append(options, discordgo.SelectMenuOption{
+				Label:       fmt.Sprintf("%d. %s", idx+1, sub.GameName),
+				Value:       fmt.Sprintf("%d", idx),
+				Description: truncateString(sub.Description, 100),
+				Default:     isDefault,
+			})
+		}
+
 		rankLabel := fmt.Sprintf("%d%s Choice", rank+1, ordinalSuffix(rank+1))
 		components = append(components, discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{discordgo.SelectMenu{
@@ -205,6 +226,11 @@ func buildVoteFormComponents(poll *Poll, errorText string) []discordgo.MessageCo
 				Label:    "Submit Rankings",
 				Style:    discordgo.SuccessButton,
 				CustomID: formID{PollID: poll.ID, Kind: VoteSubmit}.String(),
+			},
+			discordgo.Button{
+				Label:    "Reset",
+				Style:    discordgo.SecondaryButton,
+				CustomID: formID{PollID: poll.ID, Kind: VoteReset}.String(),
 			},
 		},
 	})

@@ -157,6 +157,7 @@ var (
 	SubmitModal  = kind("submit-modal")
 	VoteSelect   = kind("vote-select")
 	VoteSubmit   = kind("vote-submit")
+	VoteReset    = kind("vote-reset")
 	LockButton   = kind("lock")
 	EndButton    = kind("end")
 	VoteButton   = kind("vote")

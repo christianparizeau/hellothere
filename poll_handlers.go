@@ -57,6 +57,8 @@ func handleFormEvent(s *discordgo.Session, i *discordgo.InteractionCreate, pollS
 		HandleEndButton(s, i, poll)
 	case VoteSubmit:
 		HandleVoteSubmitButton(s, i, poll)
+	case VoteReset:
+		HandleVoteResetButton(s, i, poll)
 	}
 
 	switch f.Kind {
@@ -185,11 +187,20 @@ func HandleVoteButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll
 		return
 	}
 
+	// Clear any existing in-progress vote for this user
+	userID := i.Member.User.ID
+	for idx, vote := range poll.Votes {
+		if vote.UserID == userID {
+			poll.Votes = append(poll.Votes[:idx], poll.Votes[idx+1:]...)
+			break
+		}
+	}
+
 	// Show the voting interface
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Components: buildVoteFormComponents(poll, ""),
+			Components: buildVoteFormComponents(poll, []int{}, ""),
 			Flags:      discordgo.MessageFlagsIsComponentsV2 | discordgo.MessageFlagsEphemeral,
 		},
 	})
@@ -251,27 +262,36 @@ func HandleSubmitModal(s *discordgo.Session, i *discordgo.InteractionCreate, pol
 
 // HandleVoteSelectMenu handles dropdown selection for voting
 func HandleVoteSelectMenu(s *discordgo.Session, i *discordgo.InteractionCreate, poll *Poll, rankPosition int) {
-	defer func() {
-		_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredMessageUpdate,
-		})
-	}()
-	slog.Info("parsed vote select menu", "poll_id", poll.ID, "rank_pos", rankPosition, "user_id", i.Member.User.ID)
+	userID := i.Member.User.ID
+	slog.Info("parsed vote select menu", "poll_id", poll.ID, "rank_pos", rankPosition, "user_id", userID)
 
 	// Get selected value
 	values := i.MessageComponentData().Values
 	if len(values) == 0 {
-		slog.Error("no values selected in dropdown", "poll_id", poll.ID, "user_id", i.Member.User.ID)
+		slog.Error("no values selected in dropdown", "poll_id", poll.ID, "user_id", userID)
 		return
 	}
 	selectedIdx, err := strconv.Atoi(values[0])
 	if err != nil {
-		slog.Error("something went wrong", "poll_id", poll.ID, "user_id", i.Member.User.ID, "value", values[0])
+		slog.Error("something went wrong", "poll_id", poll.ID, "user_id", userID, "value", values[0])
 		return
 	}
-	slog.Info("user selected game", "poll_id", poll.ID, "user_id", i.Member.User.ID, "rank_pos", rankPosition, "game_idx", selectedIdx)
+	slog.Info("user selected game", "poll_id", poll.ID, "user_id", userID, "rank_pos", rankPosition, "game_idx", selectedIdx)
 
-	poll.UpsertVote(i.Member.User.ID, rankPosition, selectedIdx)
+	// Update the vote
+	vote := poll.UpsertVote(userID, rankPosition, selectedIdx)
+
+	// Rebuild the form with filtered options
+	components := buildVoteFormComponents(poll, vote.Rankings, "")
+
+	// Update the ephemeral message with the new form
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Components: components,
+			Flags:      discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
+		},
+	})
 }
 
 // HandleVoteSubmitButton processes the final vote submission
@@ -288,7 +308,7 @@ func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate
 		}
 	}
 	if vote.UserID != userID {
-		components := buildVoteFormComponents(poll, fmt.Sprintf("Unexpected voter %s", userID))
+		components := buildVoteFormComponents(poll, vote.Rankings, fmt.Sprintf("Unexpected voter %s", userID))
 		ephemeralUpdate(components, s, i)
 	}
 
@@ -296,7 +316,7 @@ func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate
 	err := poll.FinalizeVote(userID)
 	if err != nil {
 		logger.Error("failed to add vote to poll", "error", err)
-		components := buildVoteFormComponents(poll, fmt.Sprintf("Failed to record vote: %s", err.Error()))
+		components := buildVoteFormComponents(poll, vote.Rankings, fmt.Sprintf("Failed to record vote: %s", err.Error()))
 		ephemeralUpdate(components, s, i)
 		return
 	}
@@ -310,4 +330,23 @@ func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate
 			},
 		},
 	}, s, i)
+}
+
+// HandleVoteResetButton clears the user's current selections and resets the form
+func HandleVoteResetButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll *Poll) {
+	userID := i.Member.User.ID
+	logger := slog.With("poll_id", poll.ID, "user_id", userID)
+	logger.Info("resetting vote")
+
+	// Remove the user's in-progress vote
+	for idx, vote := range poll.Votes {
+		if vote.UserID == userID {
+			poll.Votes = append(poll.Votes[:idx], poll.Votes[idx+1:]...)
+			break
+		}
+	}
+
+	// Rebuild the form with no selections
+	components := buildVoteFormComponents(poll, []int{}, "")
+	ephemeralUpdate(components, s, i)
 }

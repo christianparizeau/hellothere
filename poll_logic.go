@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 
@@ -126,20 +127,16 @@ func (p *Poll) CalculateResults() []int {
 	}
 
 	// Reverse elimination order to get ranking (winner first, last eliminated last)
-	results := make([]int, len(eliminationOrder))
-	for i := range results {
-		results[i] = eliminationOrder[len(eliminationOrder)-1-i]
-	}
-
-	return results
+	slices.Reverse(eliminationOrder)
+	return eliminationOrder
 }
 
-func (p *Poll) UpsertVote(userID string, rank int, selection int) {
+func (p *Poll) UpsertVote(userID string, rank int, selection int) Vote {
 	for i, vote := range p.Votes {
 		if vote.UserID == userID {
 			vote.Rankings[rank] = selection
 			p.Votes[i] = vote
-			return
+			return vote
 		}
 	}
 	vote := Vote{
@@ -151,4 +148,5 @@ func (p *Poll) UpsertVote(userID string, rank int, selection int) {
 	}
 	vote.Rankings[rank] = selection
 	p.Votes = append(p.Votes, vote)
+	return vote
 }
