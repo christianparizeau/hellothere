@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 	"sort"
 	"time"
@@ -10,11 +11,12 @@ import (
 )
 
 // CreatePoll creates a new poll and returns it
-func CreatePoll(guildID, channelID, creatorID string, i *discordgo.Interaction, hours int) *Poll {
+func CreatePoll(guildID, channelID, creatorID string, i *discordgo.Interaction, hours int, logger *slog.Logger) *Poll {
 	now := time.Now()
 	pollID := fmt.Sprintf("%s-%d", guildID, now.Unix())
 
 	return &Poll{
+		logger:      logger.With("poll_id", pollID, "guild_id", guildID, "phase", PhaseSubmission),
 		ID:          pollID,
 		GuildID:     guildID,
 		ChannelID:   channelID,

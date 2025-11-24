@@ -35,10 +35,10 @@ func run(_ context.Context) error {
 	}
 
 	// Initialize poll state and load existing polls
-	pollState := NewPollState()
-	err = pollState.LoadFromFile("polls.json")
+	pollState := NewPollState(config.logger, "polls.json")
+	err = pollState.LoadFromFile()
 	if err != nil {
-		slog.Warn("failed to load poll state", "error", err)
+		config.logger.Warn("failed to load poll state", "error", err)
 	}
 
 	//start a bot. args[1] should be the token for the bot.
@@ -91,7 +91,7 @@ func run(_ context.Context) error {
 
 	// Save poll state before shutting down
 	slog.Info("saving poll state before shutdown")
-	err = pollState.SaveToFile("polls.json")
+	err = pollState.SaveToFile()
 	if err != nil {
 		slog.Error("failed to save poll state", "error", err)
 	}

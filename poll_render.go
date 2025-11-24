@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 	"text/template"
 	"time"
 
@@ -117,7 +116,7 @@ func (p *Poll) RenderPollContent() []discordgo.MessageComponent {
 	}
 
 	if err != nil {
-		slog.Error("failed to render poll content", "error", err, "poll_id", p.ID)
+		p.logger.Error("failed to render poll content", "error", err)
 		return []discordgo.MessageComponent{discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{Content: "Error rendering poll content"},

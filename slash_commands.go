@@ -74,7 +74,7 @@ func createPollHandler(pollState *PollState) func(s *discordgo.Session, i *disco
 		}
 
 		// Create the poll
-		poll := CreatePoll(i.GuildID, i.ChannelID, i.Member.User.ID, i.Interaction, expectedHours)
+		poll := CreatePoll(i.GuildID, i.ChannelID, i.Member.User.ID, i.Interaction, expectedHours, pollState.logger)
 
 		// Create the poll message
 		components := poll.RenderPollComponents()
@@ -92,12 +92,12 @@ func createPollHandler(pollState *PollState) func(s *discordgo.Session, i *disco
 		pollState.AddPoll(poll)
 
 		// Save state
-		err := pollState.SaveToFile("polls.json")
+		err := pollState.SaveToFile()
 		if err != nil {
-			slog.Error("failed to save poll state", "error", err)
+			pollState.logger.Error("failed to save poll state", "error", err)
 		}
 
-		slog.Info("created poll", "poll_id", poll.ID, "guild_id", poll.GuildID)
+		poll.logger.Info("created poll")
 	}
 }
 

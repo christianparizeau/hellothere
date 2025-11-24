@@ -59,6 +59,7 @@ type Vote struct {
 // Poll represents a single VGC poll
 type Poll struct {
 	mut         sync.Mutex
+	logger      *slog.Logger `json:"-"`
 	ID          string       `json:"id"`
 	GuildID     string       `json:"guild_id"`
 	ChannelID   string       `json:"channel_id"`
@@ -74,14 +75,18 @@ type Poll struct {
 
 // PollState manages all active polls
 type PollState struct {
-	polls map[string]*Poll // pollID -> Poll
-	mut   sync.RWMutex
+	logger   *slog.Logger
+	filename string
+	polls    map[string]*Poll // pollID -> Poll
+	mut      sync.RWMutex
 }
 
 // NewPollState creates a new poll state manager
-func NewPollState() *PollState {
+func NewPollState(logger *slog.Logger, filename string) *PollState {
 	return &PollState{
-		polls: make(map[string]*Poll),
+		logger:   logger,
+		filename: filename,
+		polls:    make(map[string]*Poll),
 	}
 }
 
@@ -101,7 +106,7 @@ func (ps *PollState) GetPoll(pollID string) (*Poll, bool) {
 }
 
 // SaveToFile saves the poll state to a JSON file
-func (ps *PollState) SaveToFile(filename string) error {
+func (ps *PollState) SaveToFile() error {
 	ps.mut.RLock()
 	defer ps.mut.RUnlock()
 
@@ -117,21 +122,21 @@ func (ps *PollState) SaveToFile(filename string) error {
 		return fmt.Errorf("failed to marshal polls: %w", err)
 	}
 
-	err = os.WriteFile(filename, data, 0644)
+	err = os.WriteFile(ps.filename, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write polls file: %w", err)
 	}
 
-	slog.Info("saved poll state", "filename", filename, "poll_count", len(ps.polls))
+	ps.logger.Info("saved poll state", "filename", ps.filename, "poll_count", len(ps.polls))
 	return nil
 }
 
 // LoadFromFile loads poll state from a JSON file
-func (ps *PollState) LoadFromFile(filename string) error {
-	data, err := os.ReadFile(filename)
+func (ps *PollState) LoadFromFile() error {
+	data, err := os.ReadFile(ps.filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			slog.Info("no existing polls file found", "filename", filename)
+			ps.logger.Info("no existing polls file found", "filename", ps.filename)
 			return nil
 		}
 		return fmt.Errorf("failed to read polls file: %w", err)
@@ -147,7 +152,12 @@ func (ps *PollState) LoadFromFile(filename string) error {
 	defer ps.mut.Unlock()
 	ps.polls = polls
 
-	slog.Info("loaded poll state", "filename", filename, "poll_count", len(ps.polls))
+	// Re-inject logger into each loaded poll
+	for _, poll := range ps.polls {
+		poll.logger = ps.logger.With("poll_id", poll.ID, "guild_id", poll.GuildID, "phase", poll.Phase)
+	}
+
+	ps.logger.Info("loaded poll state", "filename", ps.filename, "poll_count", len(ps.polls))
 	return nil
 }
 

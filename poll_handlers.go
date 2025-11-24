@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"strconv"
 	"time"
 
@@ -23,11 +22,11 @@ func RegisterPollHandlers(s *discordgo.Session, pollState *PollState) {
 		}
 
 		f := parseForm(customID)
-		slog.With("customID", customID).Info("Processing poll")
+		pollState.logger.With("customID", customID).Info("Processing poll")
 		handleFormEvent(s, i, pollState, f)
 
-		if err := pollState.SaveToFile("polls.json"); err != nil {
-			slog.Error("failed to save polls.json", "error", err, "id", customID)
+		if err := pollState.SaveToFile(); err != nil {
+			pollState.logger.Error("failed to save poll state", "error", err, "id", customID)
 		}
 	})
 }
@@ -35,7 +34,7 @@ func RegisterPollHandlers(s *discordgo.Session, pollState *PollState) {
 func handleFormEvent(s *discordgo.Session, i *discordgo.InteractionCreate, pollState *PollState, f formID) {
 	poll, ok := pollState.GetPoll(f.PollID)
 	if !ok {
-		slog.Warn("failed to find poll", "pollID", f.PollID)
+		pollState.logger.Warn("failed to find poll", "pollID", f.PollID)
 		ephemeralNotice("Poll not found or has expired.", s, i)
 		return
 	}
@@ -84,7 +83,7 @@ func handleFormEvent(s *discordgo.Session, i *discordgo.InteractionCreate, pollS
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
 	})
 	if err != nil {
-		slog.Error("failed to update poll message", "error", err, "poll_id", poll.ID)
+		poll.logger.Error("failed to update poll message", "error", err)
 	}
 }
 
@@ -148,7 +147,7 @@ func HandleSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate, po
 	})
 
 	if err != nil {
-		slog.Error("failed to show submission modal", "error", err)
+		poll.logger.Error("failed to show submission modal", "error", err)
 	}
 }
 
@@ -170,7 +169,7 @@ func HandleLockButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll
 		return
 	}
 
-	slog.Info("transitioning poll to voting phase", "poll_id", poll.ID)
+	poll.logger.Info("transitioning poll to voting phase")
 
 	poll.Phase = PhaseVoting
 }
@@ -206,7 +205,7 @@ func HandleVoteButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll
 	})
 
 	if err != nil {
-		slog.Error("failed to show voting interface", "error", err)
+		poll.logger.Error("failed to show voting interface", "error", err)
 		return
 	}
 }
@@ -224,7 +223,7 @@ func HandleEndButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll 
 		return
 	}
 
-	slog.Info("completing poll", "poll_id", poll.ID)
+	poll.logger.Info("completing poll")
 
 	poll.Phase = PhaseCompleted
 
@@ -263,20 +262,20 @@ func HandleSubmitModal(s *discordgo.Session, i *discordgo.InteractionCreate, pol
 // HandleVoteSelectMenu handles dropdown selection for voting
 func HandleVoteSelectMenu(s *discordgo.Session, i *discordgo.InteractionCreate, poll *Poll, rankPosition int) {
 	userID := i.Member.User.ID
-	slog.Info("parsed vote select menu", "poll_id", poll.ID, "rank_pos", rankPosition, "user_id", userID)
+	poll.logger.Info("parsed vote select menu", "rank_pos", rankPosition, "user_id", userID)
 
 	// Get selected value
 	values := i.MessageComponentData().Values
 	if len(values) == 0 {
-		slog.Error("no values selected in dropdown", "poll_id", poll.ID, "user_id", userID)
+		poll.logger.Error("no values selected in dropdown", "user_id", userID)
 		return
 	}
 	selectedIdx, err := strconv.Atoi(values[0])
 	if err != nil {
-		slog.Error("something went wrong", "poll_id", poll.ID, "user_id", userID, "value", values[0])
+		poll.logger.Error("something went wrong", "user_id", userID, "value", values[0])
 		return
 	}
-	slog.Info("user selected game", "poll_id", poll.ID, "user_id", userID, "rank_pos", rankPosition, "game_idx", selectedIdx)
+	poll.logger.Info("user selected game", "user_id", userID, "rank_pos", rankPosition, "game_idx", selectedIdx)
 
 	// Update the vote
 	vote := poll.UpsertVote(userID, rankPosition, selectedIdx)
@@ -297,7 +296,7 @@ func HandleVoteSelectMenu(s *discordgo.Session, i *discordgo.InteractionCreate, 
 // HandleVoteSubmitButton processes the final vote submission
 func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll *Poll) {
 	userID := i.Member.User.ID
-	logger := slog.With("poll_id", poll.ID, "user_id", userID)
+	logger := poll.logger.With("user_id", userID)
 	logger.Info("parsed vote submit button")
 
 	vote := Vote{}
@@ -335,7 +334,7 @@ func HandleVoteSubmitButton(s *discordgo.Session, i *discordgo.InteractionCreate
 // HandleVoteResetButton clears the user's current selections and resets the form
 func HandleVoteResetButton(s *discordgo.Session, i *discordgo.InteractionCreate, poll *Poll) {
 	userID := i.Member.User.ID
-	logger := slog.With("poll_id", poll.ID, "user_id", userID)
+	logger := poll.logger.With("user_id", userID)
 	logger.Info("resetting vote")
 
 	// Remove the user's in-progress vote
