@@ -57,72 +57,78 @@ func (p *Poll) FinalizeVote(userID string) error {
 	return nil
 }
 
-// CalculateResults uses Instant Runoff Voting to determine the ranked results
+// CalculateResults uses Instant Runoff Voting to determine the ranked results.
+// Returns a slice of candidate indices ordered from winner (first) to loser (last).
 func (p *Poll) CalculateResults() []int {
-	if len(p.Submissions) == 0 {
+	numCandidates := len(p.Submissions)
+	if numCandidates == 0 {
 		return []int{}
 	}
 
-	var results []int
-	eliminated := make(map[int]bool)
+	// If no votes, return candidates in natural order
+	if len(p.Votes) == 0 {
+		results := make([]int, numCandidates)
+		for i := range results {
+			results[i] = i
+		}
+		return results
+	}
 
-	for len(results) < len(p.Submissions) {
-		// Count first-choice votes for non-eliminated candidates
+	eliminated := make(map[int]bool)
+	var eliminationOrder []int
+
+	// Eliminate candidates one by one using IRV
+	// Each round, eliminate the candidate with the fewest first-choice votes
+	for len(eliminated) < numCandidates-1 {
+		// Count first-choice votes among remaining candidates
 		counts := make(map[int]int)
 		for _, vote := range p.Votes {
+			// Find this voter's highest-ranked non-eliminated candidate
 			for _, candidateIdx := range vote.Rankings {
-				if !eliminated[candidateIdx] {
+				if candidateIdx >= 0 && candidateIdx < numCandidates && !eliminated[candidateIdx] {
 					counts[candidateIdx]++
 					break
 				}
 			}
 		}
 
-		// If no votes, add all remaining candidates in order
-		if len(counts) == 0 {
-			for i := range p.Submissions {
-				if !eliminated[i] {
-					results = append(results, i)
+		// Find minimum vote count among remaining candidates
+		minVotes := len(p.Votes) + 1
+		for candidateIdx := 0; candidateIdx < numCandidates; candidateIdx++ {
+			if !eliminated[candidateIdx] {
+				if counts[candidateIdx] < minVotes {
+					minVotes = counts[candidateIdx]
 				}
 			}
+		}
+
+		// Collect all candidates tied for minimum votes
+		var tiedCandidates []int
+		for candidateIdx := 0; candidateIdx < numCandidates; candidateIdx++ {
+			if !eliminated[candidateIdx] && counts[candidateIdx] == minVotes {
+				tiedCandidates = append(tiedCandidates, candidateIdx)
+			}
+		}
+		sort.Ints(tiedCandidates)
+
+		// Eliminate first candidate (deterministic tie-breaking by index)
+		toEliminate := tiedCandidates[0]
+		eliminated[toEliminate] = true
+		eliminationOrder = append(eliminationOrder, toEliminate)
+	}
+
+	// Add the winner (last remaining candidate)
+	for i := 0; i < numCandidates; i++ {
+		if !eliminated[i] {
+			eliminationOrder = append(eliminationOrder, i)
 			break
 		}
+	}
 
-		// Find max and min votes
-		maxVotes, minVotes := 0, len(p.Votes)+1
-		for _, count := range counts {
-			if count > maxVotes {
-				maxVotes = count
-			}
-			if count < minVotes {
-				minVotes = count
-			}
-		}
-
-		// Collect winners (candidates with max votes)
-		var winners []int
-		for idx, count := range counts {
-			if count == maxVotes {
-				winners = append(winners, idx)
-			}
-		}
-		sort.Ints(winners) // Consistent tie-breaking
-
-		// Add winners to results and mark as eliminated
-		for _, winner := range winners {
-			results = append(results, winner)
-			eliminated[winner] = true
-		}
-
-		// Eliminate candidate with fewest votes (if not all are winners)
-		if len(results) < len(p.Submissions) {
-			for idx, count := range counts {
-				if count == minVotes && !eliminated[idx] {
-					eliminated[idx] = true
-					break
-				}
-			}
-		}
+	// Reverse elimination order to get ranking (winner first, last eliminated last)
+	results := make([]int, len(eliminationOrder))
+	for i := range results {
+		results[i] = eliminationOrder[len(eliminationOrder)-1-i]
 	}
 
 	return results
