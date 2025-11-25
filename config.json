@@ -8,6 +8,17 @@
     "NotificationChannelID": "1153517582838669322",
     "EmojiID": "\u003ca:helloThere:1140841602135371787\u003e",
     "RequiredRoleName": "hello-there",
+    "RoleConfig": {
+      "ManagementChannelID": "1416568591649738804",
+      "MessageID": "1416570526901469315",
+      "EmojiRoleConfig": {
+        "\uD83C\uDFAE": "Video Game Clubber",
+        "\uD83D\uDCEC": "Activity Enjoyer",
+        "hellothere": "hello-there",
+        "paxwest": "PAX West",
+        "lootdiver": "Helldiver"
+      }
+    },
     "UserConfig": {
       "jcalyon": {
         "OnJoinSound": "1245884627177046076"
