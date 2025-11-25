@@ -113,21 +113,10 @@ func (p playSoundOnJoin) Register(s *discordgo.Session) {
 			slog.String("channel", vs.ChannelID),
 		)
 		soundID := c.UserConfig[vs.Member.User.Username].OnJoinSound
-		if soundID == "" {
-			logger.Debug("user does not have a join sound configured")
-			return
-		}
-
-		ignoreEvent := vs.Deaf || vs.Mute || vs.SelfDeaf || vs.SelfMute || vs.SelfStream || vs.SelfVideo || vs.Suppress
-		if ignoreEvent {
-			logger.Debug("ignoring irrelevant voice state update event")
-			return
-		}
-
-		//check if the user is just joining voice. This prevents change channel from triggering the sound
 		channelID := vs.ChannelID
-		if vs.BeforeUpdate != nil && channelID == vs.BeforeUpdate.ChannelID {
-			logger.Debug("user already in same channel")
+		ok, errMessage := shouldPlaySoundOnJoin(vs, soundID)
+		if !ok {
+			logger.Debug(errMessage)
 			return
 		}
 
@@ -156,6 +145,25 @@ func (p playSoundOnJoin) Register(s *discordgo.Session) {
 			return
 		}
 	})
+}
+
+	// Determines whether a join sound should be played for a VoiceStateUpdate and soundID
+func shouldPlaySoundOnJoin(vs *discordgo.VoiceStateUpdate, soundID string) (bool, string) {
+	if soundID == "" {
+		return false, "user does not have a join sound configured"
+	}
+
+	ignoreEvent := vs.Deaf || vs.Mute || vs.SelfDeaf || vs.SelfMute || vs.SelfStream || vs.SelfVideo || vs.Suppress
+	if ignoreEvent {
+		return false, "ignoring irrelevant voice state update event"
+	}
+
+	// check if the user is just joining voice. This prevents change channel from triggering the sound
+	if vs.BeforeUpdate != nil && vs.ChannelID == vs.BeforeUpdate.ChannelID {
+		return false, "user already in same channel"
+	}
+
+	return true, ""
 }
 
 type notifyOnJoin struct {
