@@ -117,7 +117,14 @@ func (p playSoundOnJoin) Register(s *discordgo.Session) {
 			logger.Debug("user does not have a join sound configured")
 			return
 		}
-		//check if the user is just joining voice. This prevents mute/change channel/etc from triggering the sound
+
+		ignoreEvent := vs.Deaf || vs.Mute || vs.SelfDeaf || vs.SelfMute || vs.SelfStream || vs.SelfVideo || vs.Suppress
+		if ignoreEvent {
+			logger.Debug("ignoring irrelevant voice state update event")
+			return
+		}
+
+		//check if the user is just joining voice. This prevents change channel from triggering the sound
 		channelID := vs.ChannelID
 		if vs.BeforeUpdate != nil && channelID == vs.BeforeUpdate.ChannelID {
 			logger.Debug("user already in same channel")
